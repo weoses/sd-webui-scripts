@@ -333,3 +333,7 @@ def main_impl():
             time.sleep(10)
         except:
             pass
+if __name__ == '__main__':
+    main()
+
+
