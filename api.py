@@ -1,4 +1,5 @@
 import logging
+from typing import Union
 import requests
 import requests
 import io
@@ -19,7 +20,7 @@ class Base64Img():
 
 class ProgressState():
     __slots__=("progress", "eta_relative", "state", "current_image")
-    def __init__(self, progress:int, eta_relative:int, state, current_image:Base64Img|None) -> None:
+    def __init__(self, progress:int, eta_relative:int, state, current_image: Union[Base64Img, None]) -> None:
         self.progress = progress
         self.current_image = current_image
         self.eta_relative = eta_relative
