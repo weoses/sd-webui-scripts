@@ -321,15 +321,15 @@ def prompt2filename(prompt:str):
     return repl_prompt
 
 def main():
+    th = threading.Thread(target=main_impl)
+    th.start()
+    th.join()
+    exit(0)
 
+def main_impl():
     while True:
         try:
             bot.polling()
             time.sleep(10)
         except:
             pass
-
-if __name__ == '__main__':
-    main()
-
-
