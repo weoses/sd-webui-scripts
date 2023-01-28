@@ -1,0 +1,5 @@
+.env
+upload/
+__pycache__
+config.json
+jobs
