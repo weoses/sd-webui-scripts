@@ -73,7 +73,7 @@ def negative_handler(message:types.Message):
         msgtext = message.text
 
         if not msgtext:
-            bot.send_message(message.chat.id, reply_to_message_id=message.id, text=msg_conf_node["error_no_text"])
+            bot.send_message(message.chat.id, reply_to_message_id=message.id, text=msg_conf_node["error_text"])
             return
 
         array = msgtext.split(" ", maxsplit=1)
@@ -95,7 +95,7 @@ def size_handler(message:types.Message):
         msgtext = message.text
 
         if not msgtext:
-            bot.send_message(message.chat.id, reply_to_message_id=message.id, text=msg_conf_node["error_no_text"])
+            bot.send_message(message.chat.id, reply_to_message_id=message.id, text=msg_conf_node["error_text"])
             return
 
         array = msgtext.split(" ", maxsplit=2)
@@ -126,7 +126,7 @@ def steps_handler(message:types.Message):
         msgtext = message.text
 
         if not msgtext:
-            bot.send_message(message.chat.id, reply_to_message_id=message.id, text=msg_conf_node["error_no_text"])
+            bot.send_message(message.chat.id, reply_to_message_id=message.id, text=msg_conf_node["error_text"])
             return
 
         array = msgtext.split(" ", maxsplit=1)
@@ -158,7 +158,7 @@ def progress_preview_setting_handler(message:types.Message):
         msgtext = message.text
 
         if not msgtext:
-            bot.send_message(message.chat.id, reply_to_message_id=message.id, text=msg_conf_node["error_no_text"])
+            bot.send_message(message.chat.id, reply_to_message_id=message.id, text=msg_conf_node["error_text"])
             return
 
         array = msgtext.split(" ", maxsplit=1)
@@ -180,7 +180,7 @@ def progress_setting_handler(message:types.Message):
         msgtext = message.text
 
         if not msgtext:
-            bot.send_message(message.chat.id, reply_to_message_id=message.id, text=msg_conf_node["error_no_text"])
+            bot.send_message(message.chat.id, reply_to_message_id=message.id, text=msg_conf_node["error_text"])
             return
 
         array = msgtext.split(" ", maxsplit=1)
@@ -211,7 +211,7 @@ def upscale_handler(message:types.Message):
                 file_id = photo.file_id
         
         if not file_id:
-            bot.send_message(message.chat.id, reply_to_message_id=message.id, text=msg_conf_node["error_no_text"])
+            bot.send_message(message.chat.id, reply_to_message_id=message.id, text=msg_conf_node["error_text"])
             return 
         if text:
             texts  = text.split(" ", maxsplit=1)
