@@ -480,6 +480,10 @@ def img2img_handler(message: types.Message):
                             width=need_sizes[0],
                             height=need_sizes[1] )
 
+        if neural.get_neural_setting_value(config.UPSCALE):
+            img  = __upscale(img, status_msg)
+
+        
         bot.edit_message_media(
             message_id=status_msg.message_id,
             chat_id=status_msg.chat.id,
