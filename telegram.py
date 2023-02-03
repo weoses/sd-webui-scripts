@@ -390,20 +390,22 @@ def img2img_handler(message: types.Message):
             prompt_line = ""
             prompt_sp = []
             try:
-                texts = text.split(" ", maxsplit=1)
-                prompt_line = texts[1]
+                prompt_sp = text.split(" ", maxsplit=1)
+                prompt_line = prompt_sp[1]
             except IndexError as e:
                 logging.warning(f"img2img using default prompt")
 
             try:
-                prompt_sp = prompt_line.split(" ", maxsplit=1)
-                denoising = float(prompt_sp[0])
+                prompt_sp_1 = prompt_line.split(" ", maxsplit=1)
+                denoising = float(prompt_sp_1[0])
+                prompt_sp = prompt_sp_1
             except:
                 logging.warning(f"img2img using default denoising")
 
             try:
-                prompt_sp = prompt_sp[1].split(" ", maxsplit=1)
-                steps = int(prompt_sp[0])
+                prompt_sp_1 = prompt_sp[1].split(" ", maxsplit=1)
+                steps = int(prompt_sp_1[0])
+                prompt_sp = prompt_sp_1
             except:
                 logging.warning(f"img2img using default steps")
 
