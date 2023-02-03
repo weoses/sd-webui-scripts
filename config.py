@@ -103,3 +103,10 @@ def reset_neural():
     logging.info("Deleting neural config")
     os.remove("./telegram_neural.current.yaml")
     return load_neural()
+
+
+def load_vk_post():
+    if os.path.exists("./vk_post.current.yaml"):
+        return Config("./vk_post.current.yaml")
+    return Config("./vk_post.yaml")
+

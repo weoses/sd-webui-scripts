@@ -1,0 +1,7 @@
+app_id: 12345678
+app_secret: "some secret"
+login: "+228<phone>"
+password: "<password>"
+group_id: 132465798
+album_id: 987654315
+folder: "./upload"
