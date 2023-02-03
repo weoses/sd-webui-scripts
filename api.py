@@ -96,7 +96,8 @@ def gen_img2img(url: str,
                 height=512,
                 cfg_scale=4,
                 steps=40,
-                sampler="Euler a") -> Base64Img:
+                sampler="Euler a",
+                denoising = 0.4) -> Base64Img:
     resp = requests.post(url=f'{url}/sdapi/v1/img2img', json={
         "init_images": [
             "data:image/png;base64," + img.base64String
@@ -109,7 +110,7 @@ def gen_img2img(url: str,
         "cfg_scale": cfg_scale,
         "sampler_name": sampler,
         "seed": -1,
-        "denoising_strength": 0.4,
+        "denoising_strength": denoising,
     })
     __check_resp(resp)
 

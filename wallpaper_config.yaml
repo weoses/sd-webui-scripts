@@ -1,0 +1,11 @@
+url: http://127.0.0.1:7860
+prompts:
+- anime, 1girl, pink hair, happy
+- anime, 1girl, simple background, neko ears
+negative: realistic
+width: 960
+height: 540
+upscale: 2
+count: 8
+folder: "./upload"
+cfg_scale: 4

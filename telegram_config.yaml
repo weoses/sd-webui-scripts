@@ -1,0 +1,4 @@
+gen_cmd: anime
+url: http://127.0.0.1:7860
+token: token
+save_folder: ./upload
