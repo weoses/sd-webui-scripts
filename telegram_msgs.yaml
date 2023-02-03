@@ -29,7 +29,11 @@ error: Я упал
 help: |-
   /anime 
   /steps <step_num>
-  /size <width> <height>
+  /size <width> <height> 
+  - For img2img generating frame will be resized to fit in setting bounds.
+  - ex. Size = 512x512. 
+  - Incoming - 1024x512. 
+  - Generated - 512x256
   /negative <text>
   /img2img [denoising] [steps] [prompt]
   /model

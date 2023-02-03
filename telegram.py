@@ -432,16 +432,38 @@ def img2img_handler(message: types.Message):
 
         img_pil = Image.open(input_data)
 
+        logging.info(f"img2img incoming {img_pil.size[0]}x{img_pil.size[1]}")
+
         if img_pil.size[0] > 1500 or img_pil.size[1] > 1500:
             modx = 1500 / img_pil.size[0]
             mody = 1500 / img_pil.size[1]
             mod_max = max(modx, mody)
-            img_pil.resize((int(img_pil.size[0] * mod_max), int(img_pil.size[1] * mod_max)))
+            img_pil = img_pil.resize((int(img_pil.size[0] * mod_max), int(img_pil.size[1] * mod_max)))
+            logging.info(f"img2img resizied {img_pil.size[0]}x{img_pil.size[1]}")
             return
         
-        # save img aspect radio
+        # save img 
+        # ex aspect radio 1024/512 = 0.5
+        # need 128 x 128
+        # x = 256
+        # y = 128
+        # y / aspect = x
+        # 128 / 0.5 = 256
         xy = img_pil.size[0] / img_pil.size[1]
-        need_sizes = (neural.get_neural_setting_value(config.WIDTH), int(neural.get_neural_setting_value(config.WIDTH) * xy))
+        if xy >= 1 : 
+            # width  > height
+            # incoming - 1000 x 500
+            # need - 512x512
+            # xy = 2
+            # calc - 512 x 256  y = (x / xy)
+            need_sizes = (int(neural.get_neural_setting_value(config.WIDTH)), int(neural.get_neural_setting_value(config.WIDTH) / xy))
+        else :
+            # width < height
+            # incoming - 500 x 1000
+            # need - 512x512
+            # xy = 0.5
+            # calc - 256 x 512 (y * xy)
+            need_sizes = (int(neural.get_neural_setting_value(config.HEIGHT) * xy)), int(neural.get_neural_setting_value(config.HEIGHT))
 
         img_pil.save(output_data, format="png")
         output_data.seek(0)
