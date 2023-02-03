@@ -1,13 +1,7 @@
 - code: negative
   description: Negative prompt for img2img or text2img
   type: str
-  value: "((((ugly)))), (((duplicate))), ((morbid)), ((mutilated)), extra fingers,
-    mutated hands, ((poorly drawn hands)),, (((mutation))), (((deformed))), blurry,
-    ((bad anatomy)), (((bad proportions))), ((extra limbs)), cloned face, (((disfigured))),
-    ((out of frame)), gross proportions, (malformed limbs), ((missing arms)), ((missing
-    legs)), (((extra arms))), (((extra legs))), mutated hands, (fused fingers), (too
-    many fingers), (((long neck))), (((worst quality))), jpeg artifacts, signature,
-    (watermark), username"
+  value: realistic
 - code: steps
   type: int
   description: Steps for img2img or text2img

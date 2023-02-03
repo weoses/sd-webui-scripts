@@ -1,3 +1,4 @@
+import math
 import time
 import config
 import pydoc
@@ -432,13 +433,20 @@ def img2img_handler(message: types.Message):
         img_pil = Image.open(input_data)
 
         if img_pil.size[0] > 1500 or img_pil.size[1] > 1500:
-            bot.send_message(message.chat.id, reply_to_message_id=message.id, text=msgs.get_value("error_text"))
+            modx = 1500 / img_pil.size[0]
+            mody = 1500 / img_pil.size[1]
+            mod_max = max(modx, mody)
+            img_pil.resize((int(img_pil.size[0] * mod_max), int(img_pil.size[1] * mod_max)))
             return
+        
+        # save img aspect radio
+        xy = img_pil.size[0] / img_pil.size[1]
+        need_sizes = (neural.get_neural_setting_value(config.WIDTH), int(neural.get_neural_setting_value(config.WIDTH) * xy))
 
         img_pil.save(output_data, format="png")
         output_data.seek(0)
 
-        logging.info(f"img2img generating {img_pil.size[0]}x{img_pil.size[1]}, prompt - {prompt}, denoising - {denoising}, steps - {steps}")
+        logging.info(f"img2img generating {need_sizes[0]}x{need_sizes[1]}, prompt - {prompt}, denoising - {denoising}, steps - {steps}")
 
         img = api.Base64Img(base64.b64encode(output_data.read()).decode("utf-8"))
         img = api.gen_img2img(url, 
@@ -447,8 +455,8 @@ def img2img_handler(message: types.Message):
                             negative_prompt=neural.get_neural_setting_value(config.NEGATIVE),
                             steps=steps,
                             denoising=denoising,
-                            width=img_pil.size[0],
-                            height=img_pil.size[1] )
+                            width=need_sizes[0],
+                            height=need_sizes[1] )
 
         bot.edit_message_media(
             message_id=status_msg.message_id,
