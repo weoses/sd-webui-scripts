@@ -6,6 +6,7 @@ import shutil
 import os
 import config as config
 import custom_log
+import pathlib
 from PIL import Image
 
 logger = custom_log.create_logger(__name__)
@@ -32,6 +33,8 @@ def main():
         del_all(saves)
     except Exception as e:
         logger.warning(e)
+
+    model = api.get_options(conf.get_value('url')).model
 
     img_index = 0
     while img_index < conf.get_value('count'):
@@ -66,8 +69,17 @@ def main():
             continue
 
         img_upscaled = api.upscale(conf.get_value("url"), img,  conf.get_value("upscale"))
+        
+        fname = f'img_{time.time()}_{img_index}.png'
 
-        img_upscaled.save(os.path.join(conf.get_value('save_folder'), f"img_{time.time()}_{img_index}.png"))
+        save_img_path = pathlib.Path(conf.get_value('save_folder'), fname)
+        save_prompt_path = pathlib.Path(conf.get_value('save_folder'), f"{fname}.prompt.txt")
+        save_model_path = pathlib.Path(conf.get_value('save_folder'), f"{fname}.model.txt")
+
+        img_upscaled.save(save_img_path)
+        save_prompt_path.write_text(prompt, encoding='utf-8')
+        save_model_path.write_text(model, encoding='utf-8')
+       
         img_index = img_index + 1
 
 if __name__ == '__main__':

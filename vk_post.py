@@ -4,7 +4,7 @@ import logging
 import config as config
 import custom_log
 from datetime import datetime
-import shutil
+import pathlib
 
 logger = custom_log.create_logger(__name__)
 
@@ -46,7 +46,25 @@ def main():
         f.write(current_files_str)
 
     for file in files:
-        photo_item = upload.photo(os.path.join(folder, file), album_id=album_id, group_id=group_id, description="Stable diffusion")
+        if str(file).endswith('.txt'):
+            continue
+
+        prompt = 'Stable diffusion'
+        model = ''
+        
+        img_file = pathlib.Path(folder, file)
+        
+        img_prompt_file = pathlib.Path(folder, file+".prompt.txt")
+        if img_prompt_file.exists():
+            prompt = img_prompt_file.read_text(encoding='utf-8')
+        
+        img_model_file = pathlib.Path(folder, file+".model.txt")
+        if img_model_file.exists():
+            model = img_model_file.read_text(encoding='utf-8')
+
+        descr = f'Model: {model}\n Prompt: {prompt}'
+
+        photo_item = upload.photo(img_file, album_id=album_id, group_id=group_id, description=descr)
         uploaded_name = f"photo{photo_item[0]['owner_id']}_{photo_item[0]['id']}"
         logging.info(f"Photo {file} uploaded as {uploaded_name}")
         photos.append(uploaded_name)
