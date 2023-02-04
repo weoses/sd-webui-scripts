@@ -63,7 +63,7 @@ def generate_handler(message):
         if neural.get_neural_setting_value(config.UPSCALE):
             img = __upscale(img, status_msg)
 
-        img.save(os.path.join(neural.get_neural_setting_value(config.SAVE_FOLDER), filename))
+        img.save(os.path.join(conf.get_value(config.SAVE_FOLDER), filename))
 
         bot.edit_message_media(
             message_id=status_msg.message_id,

@@ -17,5 +17,5 @@ jobs:
 
 # Neural tg bot
 - name: telegram_bot
-  command: python telegram.py
+  command: python3 telegram.py
   type: always
