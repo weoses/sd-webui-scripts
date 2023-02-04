@@ -27,8 +27,8 @@ def main():
         oldes = conf.get_value("old_folder")
         os.makedirs(saves, exist_ok=True)
         os.makedirs(oldes, exist_ok=True)
-
-        shutil.copytree(os.path.join(saves, "*"), oldes, dirs_exist_ok=True)
+        logger.info(f"Copy tree {saves} -> {oldes}")
+        shutil.copytree(saves, oldes, dirs_exist_ok=True)
         del_all(saves)
     except Exception as e:
         logger.warning(e)
