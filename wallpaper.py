@@ -28,10 +28,10 @@ def main():
         os.makedirs(saves, exist_ok=True)
         os.makedirs(oldes, exist_ok=True)
 
-        shutil.copytree(saves, oldes, dirs_exist_ok=True)
+        shutil.copytree(os.path.join(saves, "*"), oldes, dirs_exist_ok=True)
         del_all(saves)
-    except:
-        pass
+    except Exception as e:
+        logger.warning(e)
 
     i = 0
     while i < conf.get_value('count'):
