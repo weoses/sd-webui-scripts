@@ -1,26 +1,26 @@
-import math
 import time
-import config
-import pydoc
 from telebot import TeleBot;
 from telebot import types;
+import config
 import api
+import sys
 import base64
 import json
 import threading
 import logging
 import io
 import os
+import custom_log
 from PIL import Image
-import shutil
+import custom_log
 
+logger = custom_log.create_logger(__name__)
 logging.basicConfig(level=logging.INFO)
+
 loading_image_id = None
 
-
-
-conf = config.load_setting()
-msgs = config.load_msgs()
+conf = config.load_telegram_setting()
+msgs = config.load_telegram_msgs()
 neural = config.load_neural()
 
 url = conf.get_value(config.URL)
@@ -49,12 +49,12 @@ def generate_handler(message):
 
         prompt_user = array[1]
 
-        logging.info(f"Generate with prompt {prompt_user}")
+        logger.info(f"Generate with prompt {prompt_user}")
         status_msg = __send_waiting(message)
 
         filename = f"img_{prompt2filename(prompt_user)}_{time.time()}.png"
 
-        logging.info(f"Img name - {filename}")
+        logger.info(f"Img name - {filename}")
 
         # GENERATING
         img = __generate(prompt_user, status_msg)
@@ -70,7 +70,7 @@ def generate_handler(message):
             chat_id=status_msg.chat.id,
             media=types.InputMediaPhoto(img.to_reader(), caption=msgs.get_value("completed")))
 
-        logging.info(f"Completed")
+        logger.info(f"Completed")
 
     except Exception as e:
         __logFatal(e, message.chat.id, message.id)
@@ -303,6 +303,7 @@ def saveconfig_handler(message: types.Message):
     except Exception as e:
         __logFatal(e, message.chat.id, message.id)
 
+
 @bot.message_handler(commands=["resetconfig"])
 def resetconfig_handler(message: types.Message):
     global neural
@@ -393,26 +394,26 @@ def img2img_handler(message: types.Message):
                 prompt_sp = text.split(" ", maxsplit=1)
                 prompt_line = prompt_sp[1]
             except IndexError as e:
-                logging.warning(f"img2img using default prompt")
+                logger.warning(f"img2img using default prompt")
 
             try:
                 prompt_sp_1 = prompt_line.split(" ", maxsplit=1)
                 denoising = float(prompt_sp_1[0])
                 prompt_sp = prompt_sp_1
             except:
-                logging.warning(f"img2img using default denoising")
+                logger.warning(f"img2img using default denoising")
 
             try:
                 prompt_sp_1 = prompt_sp[1].split(" ", maxsplit=1)
                 steps = int(prompt_sp_1[0])
                 prompt_sp = prompt_sp_1
             except:
-                logging.warning(f"img2img using default steps")
+                logger.warning(f"img2img using default steps")
 
             try:
                 prompt = str(prompt_sp[1])
             except:
-                logging.warning(f"img2img using default prompt")
+                logger.warning(f"img2img using default prompt")
 
 
         if steps > 100 : 
@@ -434,14 +435,14 @@ def img2img_handler(message: types.Message):
 
         img_pil = Image.open(input_data)
 
-        logging.info(f"img2img incoming {img_pil.size[0]}x{img_pil.size[1]}")
+        logger.info(f"img2img incoming {img_pil.size[0]}x{img_pil.size[1]}")
 
         if img_pil.size[0] > 1500 or img_pil.size[1] > 1500:
             modx = 1500 / img_pil.size[0]
             mody = 1500 / img_pil.size[1]
             mod_max = max(modx, mody)
             img_pil = img_pil.resize((int(img_pil.size[0] * mod_max), int(img_pil.size[1] * mod_max)))
-            logging.info(f"img2img resizied {img_pil.size[0]}x{img_pil.size[1]}")
+            logger.info(f"img2img resizied {img_pil.size[0]}x{img_pil.size[1]}")
             return
         
         # save img 
@@ -470,7 +471,7 @@ def img2img_handler(message: types.Message):
         img_pil.save(output_data, format="png")
         output_data.seek(0)
 
-        logging.info(f"img2img generating {need_sizes[0]}x{need_sizes[1]}, prompt - {prompt}, denoising - {denoising}, steps - {steps}")
+        logger.info(f"img2img generating {need_sizes[0]}x{need_sizes[1]}, prompt - {prompt}, denoising - {denoising}, steps - {steps}")
 
         img = api.Base64Img(base64.b64encode(output_data.read()).decode("utf-8"))
         img = api.gen_img2img(url, 
@@ -525,6 +526,18 @@ def conf_change_callback(msg:types.CallbackQuery):
     bot.register_next_step_handler(msg.message, next_handler)
 
 
+@bot.message_handler(commands=["shutdown"])
+def shutdown_handler(message: types.Message):
+    try:
+        bot.send_message(message.chat.id,
+                        reply_to_message_id=message.id,
+                        text="Im going to die")
+    except Exception as e:
+        __logFatal(e, message.chat.id, message.id)
+
+    os._exit(2)
+    
+
 def __send_waiting(message: types.Message) -> types.Message:
     global loading_image_id
 
@@ -546,7 +559,7 @@ def __generate(prompt_user, sent: types.Message) -> api.Base64Img:
     global negative
     ret = []
 
-    logging.info(f"Generating, prompt = {prompt_user}")
+    logger.info(f"Generating, prompt = {prompt_user}")
 
     def gen_func():
         img = api.gen_img(url, prompt_user, neural.get_neural_setting_value(config.NEGATIVE), neural.get_neural_setting_value(config.WIDTH), neural.get_neural_setting_value(config.HEIGHT),
@@ -579,7 +592,7 @@ def __generate(prompt_user, sent: types.Message) -> api.Base64Img:
 
 def __upscale(img: api.Base64Img, sent: types.Message) -> api.Base64Img:
     ret = []
-    logging.info(f"Upscaling...")
+    logger.info(f"Upscaling...")
 
     bot.edit_message_caption(
         message_id=sent.message_id,
@@ -597,7 +610,7 @@ def __upscale(img: api.Base64Img, sent: types.Message) -> api.Base64Img:
 
 
 def __logFatal(e: Exception, chat_id, message_id):
-    logging.exception(e)
+    logger.exception(e)
     bot.send_message(chat_id, reply_to_message_id=message_id, text=msgs.get_value("error"))
 
 
@@ -621,7 +634,7 @@ def main_impl():
             bot.polling()
             time.sleep(10)
         except Exception as e:
-            logging.exception(e)
+            logger.exception(e)
 
 
 if __name__ == '__main__':

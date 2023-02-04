@@ -1,10 +1,13 @@
 import os
 import vk_api
 import logging
-import config
+import config as config
+import custom_log
 from datetime import datetime
+import shutil
 
-logging.basicConfig(level=logging.INFO)
+logger = custom_log.create_logger(__name__)
+
 conf = config.load_vk_post()
 
 def main():
@@ -53,4 +56,5 @@ def main():
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO)
     main()

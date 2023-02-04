@@ -1,0 +1,21 @@
+jobs:
+# Wallpaper generaion every night
+- name: wallapper_generator
+  parts:
+  - name: walpapper
+    command: python3 wallpaper.py
+  type: schedule
+  run_at: '05:07'
+
+# Post wallpapers to VK
+- name: vk_poster
+  parts:
+    - name: vkposter
+      command: python3 posting_bot.py
+  type: schedule
+  run_at: '19:30'
+
+# Neural tg bot
+- name: telegram_bot
+  command: python telegram.py
+  type: always

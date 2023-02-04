@@ -4,6 +4,12 @@ import shutil
 import types
 import yaml
 import logging
+import custom_log
+
+logger = custom_log.create_logger(__name__)
+
+CONFIG_FOLDER = './config'
+
 URL = "url"
 TOKEN = "token"
 
@@ -28,7 +34,7 @@ class ConfigNeural:
     __slots__ = ("__conf_node", "__file")
 
     def __init__(self, file:str) -> None:
-        logging.info(f"Load neural config, file - {file}")
+        logger.info(f"Load neural config, file - {file}")
         self.__file = file
         self.__conf_node = yaml.load(open(self.__file, "r", encoding="utf-8"), Loader=yaml.SafeLoader)
 
@@ -47,7 +53,7 @@ class ConfigNeural:
 
     def set_neural_setting_value(self, setting_code, value):
         setting = self.get_neural_setting(setting_code)
-        logging.info(f"Seting config {setting_code} = '{value}'")
+        logger.info(f"Seting config {setting_code} = '{value}'")
         tp = pydoc.locate(setting["type"])
         if tp == bool:
             if str(value).lower() == 'true' or str(value).lower() == '1':
@@ -65,48 +71,53 @@ class ConfigNeural:
 class Config:
     __slots__ = ("__conf_node", "__file")
     def __init__(self, file:str) -> None:
-        logging.info(f"Load config, file - {file}")
+        logger.info(f"Load config, file - {file}")
         self.__file = file
         self.__conf_node = yaml.load(open(self.__file, "r", encoding="utf-8"), Loader=yaml.SafeLoader)
 
     def get_value(self, name:str):
         return self.__conf_node[name]
+    
+    def __getitem__(self, name):
+        return self.__conf_node[name]
+
+def load_telegram_msgs():
+    return Config(get_path("telegram_msgs"))
 
 
-def load_msgs():
-    if os.path.exists("./telegram_msgs.current.yaml"):
-        return Config("./telegram_msgs.current.yaml")
-    return Config("./telegram_msgs.yaml")
-
-
-def load_setting():
-    if os.path.exists("./telegram_config.current.yaml"):
-        return Config("./telegram_config.current.yaml")
-    return Config("./telegram_config.yaml")
+def load_telegram_setting():
+    return Config(get_path("telegram_config"))
 
 
 def load_wallpaper():
-    if os.path.exists("./wallpaper_config.current.yaml"):
-        return Config("./wallpaper_config.current.yaml")
-    return Config("./wallpaper_config.yaml")
+    return Config(get_path("wallpaper_config"))
 
 
 def load_neural():
-    logging.info("loading neural config")
-
-    if not os.path.exists("./telegram_neural.current.yaml"):
-        shutil.copy("./telegram_neural.yaml", "./telegram_neural.current.yaml")
-    return ConfigNeural("./telegram_neural.current.yaml")
+    logger.info("loading neural config")
+    return ConfigNeural(get_path("telegram_neural"))
 
 
 def reset_neural():
-    logging.info("Deleting neural config")
-    os.remove("./telegram_neural.current.yaml")
+    path = get_path("telegram_neural")
+
+    if (path.endswith(".current.yaml")):
+        logger.info(f"Deleting neural config {path}")
+        os.remove(path)
+
     return load_neural()
 
 
 def load_vk_post():
-    if os.path.exists("./vk_post.current.yaml"):
-        return Config("./vk_post.current.yaml")
-    return Config("./vk_post.yaml")
+    return Config(get_path("vk_post"))
 
+def load_schedule():
+    return Config(get_path("scheluder"))
+
+
+
+def get_path(cfgname:str) -> str:
+    curr_path = os.path.join(CONFIG_FOLDER, f'{cfgname}.current.yaml')
+    def_path = os.path.join(CONFIG_FOLDER, f'{cfgname}.yaml')
+    if (os.path.exists(curr_path)): return curr_path
+    return def_path

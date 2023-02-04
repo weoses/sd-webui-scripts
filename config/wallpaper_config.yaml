@@ -7,5 +7,6 @@ width: 960
 height: 540
 upscale: 2
 count: 8
-folder: "./upload"
+save_folder: "./upload"
+old_folder : "./upload_old"
 cfg_scale: 4
