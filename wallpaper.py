@@ -33,8 +33,8 @@ def main():
     except Exception as e:
         logger.warning(e)
 
-    i = 0
-    while i < conf.get_value('count'):
+    img_index = 0
+    while img_index < conf.get_value('count'):
         prompt = random.choice(conf.get_value("prompts"))
         logger.info(f"Gen with prompt {prompt}")
         img = api.gen_img(
@@ -51,8 +51,8 @@ def main():
         band_values = image_pilled.getextrema()
         bands = image_pilled.getbands()
         
-        for i, band in enumerate(band_values):
-            band_name = bands[i]
+        for band_index, band in enumerate(band_values):
+            band_name = bands[band_index]
             if band_name == 'A':
                 continue
 
@@ -67,8 +67,8 @@ def main():
 
         img_upscaled = api.upscale(conf.get_value("url"), img,  conf.get_value("upscale"))
 
-        img_upscaled.save(os.path.join(conf.get_value('save_folder'), f"img_{time.time()}_{i}.png"))
-        i = i + 1
+        img_upscaled.save(os.path.join(conf.get_value('save_folder'), f"img_{time.time()}_{img_index}.png"))
+        img_index = img_index + 1
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
