@@ -64,7 +64,7 @@ def main():
 
         descr = f'Model: {model}\n Prompt: {prompt}'
 
-        photo_item = upload.photo(img_file, album_id=album_id, group_id=group_id, description=descr)
+        photo_item = upload.photo(str(img_file), album_id=album_id, group_id=group_id, description=descr)
         uploaded_name = f"photo{photo_item[0]['owner_id']}_{photo_item[0]['id']}"
         logging.info(f"Photo {file} uploaded as {uploaded_name}")
         photos.append(uploaded_name)
