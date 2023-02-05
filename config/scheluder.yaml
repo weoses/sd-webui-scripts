@@ -11,7 +11,7 @@ jobs:
 - name: vk_poster
   parts:
     - name: vkposter
-      command: python3 posting_bot.py
+      command: python3 vk_post.py
   type: schedule
   run_at: '19:30'
 
