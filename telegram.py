@@ -215,18 +215,27 @@ def progress_setting_handler(message: types.Message):
         __logFatal(e, message.chat.id, message.id)
 
 
-@bot.message_handler(func=lambda message: message.caption.startswith("/upscale"), content_types=["photo", "document"])
+@bot.message_handler(func=lambda message: 
+                       (message.content_type == 'text' and message.text and message.text.startswith('/upscale')) 
+                       or 
+                       (message.content_type == 'photo' and message.caption and message.caption.startswith("/upscale")),
+                    content_types=["photo", "document", "text"])
 def upscale_handler(message: types.Message):
     try:
+        reply_msg = message.reply_to_message
+        img_message = message
+        if reply_msg:
+            img_message = reply_msg
+
         file_id = None
         text = None
         multipler = 2
-        photo = message.photo
+        photo = img_message.photo
         if photo:
             file_id = photo[-1].file_id
             text = message.caption
         else:
-            photo = message.document
+            photo = img_message.document
             if photo:
                 text = message.text
                 file_id = photo.file_id
@@ -351,9 +360,9 @@ def config_handler(message: types.Message):
 
 
 @bot.message_handler(func=lambda message: 
-                       (message.content_type == 'text' and message.text.startswith('/img2img')) 
+                       (message.content_type == 'text' and message.text and message.text.startswith('/img2img')) 
                        or 
-                       (message.content_type == 'photo' and message.caption.startswith("/img2img")),
+                       (message.content_type == 'photo' and message.caption and message.caption.startswith("/img2img")),
                     content_types=["photo", "document", "text"])
 def img2img_handler(message: types.Message):
     try:
@@ -622,20 +631,10 @@ def prompt2filename(prompt: str):
 
 
 def main():
-    th = threading.Thread(target=main_impl)
-    th.start()
-    th.join()
-    exit(0)
-
-
-def main_impl():
-    while True:
-        try:
-            bot.polling()
-            time.sleep(10)
-        except Exception as e:
-            logger.exception(e)
-
+    try:
+        bot.polling()
+    except Exception as e:
+        logger.exception(e)
 
 if __name__ == '__main__':
     main()
