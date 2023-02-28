@@ -1,0 +1,15 @@
+picrandom_folder: e:/botable/picrandom
+bthread_folder: e:/botable/bthread
+anek_folder: e:/botable/aneks
+quotes_folder: e:/botable/quotes
+
+picrandom_folder_url: https://botable/picrandom/
+bthread_folder_url: https://botable/bthread/
+
+quote_thumb_url: https://botable/thumbs/quote.jpg
+anek_thumb_url: https://botable/thumbs/anek.jpg
+picrandom_thumb_url: https://botable/thumbs/picrandom.jpg
+bthread_thumb_url: https://botable/thumbs/bthread.jpg
+no_tittle_thumb_url: https://botable/thumbs/no_title_msg.jpg
+
+bot_token: ''

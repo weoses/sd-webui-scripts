@@ -46,7 +46,8 @@ def main():
             conf.get_value("negative"),
             conf.get_value("width"),
             conf.get_value("height"),
-            cfg_scale=conf.get_value("cfg_scale"))
+            cfg_scale=conf.get_value("cfg_scale"),
+            enable_hr=conf.get_value("hr_fix"))
         
         empty = False
         image_pilled = Image.open(img.to_reader())
@@ -68,8 +69,11 @@ def main():
             logger.warning("Generated an empty image")        
             continue
 
-        img_upscaled = api.upscale(conf.get_value("url"), img,  conf.get_value("upscale"))
-        
+        if conf.get_value("upscale") == 1:
+            img_upscaled = api.upscale(conf.get_value("url"), img,  conf.get_value("upscale_size"))
+        else :
+            img_upscaled = img
+
         fname = f'img_{time.time()}_{img_index}.png'
 
         save_img_path = pathlib.Path(conf.get_value('save_folder'), fname)

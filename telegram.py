@@ -594,7 +594,7 @@ def __generate(prompt_user, sent: types.Message) -> api.Base64Img:
                     message_id=sent.message_id,
                     chat_id=sent.chat.id,
                     caption=banner)
-        time.sleep(2)
+        time.sleep(3)
 
     return ret[0]
 

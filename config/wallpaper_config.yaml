@@ -5,7 +5,9 @@ prompts:
 negative: realistic
 width: 960
 height: 540
-upscale: 2
+hr_fix: true
+upscale: true
+upscale_size: 2
 count: 8
 save_folder: "./upload"
 old_folder : "./upload_old"

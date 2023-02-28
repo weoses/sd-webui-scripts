@@ -71,7 +71,11 @@ def gen_img(url: str,
             height,
             cfg_scale=4,
             steps=40,
-            sampler="Euler a") -> Base64Img:
+            sampler="Euler a",
+            enable_hr=False,
+            hr_scale=2,
+            hr_upscaler='R-ESRGAN 4x+ Anime6B',
+            denoising_strength=0.7) -> Base64Img:
     resp = requests.post(url=f'{url}/sdapi/v1/txt2img', json={
         "prompt": prompt,
         "negative_prompt": negative_prompt,
@@ -81,7 +85,10 @@ def gen_img(url: str,
         "cfg_scale": cfg_scale,
         "sampler_name": sampler,
         "seed": -1,
-        "enable_hr": False,
+        "enable_hr": enable_hr,
+        "hr_scale" : hr_scale,
+        "ht_upscaler": hr_upscaler,
+        "denoising_strength" : denoising_strength
     })
     __check_resp(resp)
 

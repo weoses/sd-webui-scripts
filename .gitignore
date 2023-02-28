@@ -1,6 +1,7 @@
 .env
 .vscode
 upload/
+upload_old/
 __pycache__
 config.json
 jobs

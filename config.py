@@ -92,6 +92,9 @@ def load_telegram_setting():
 def load_wallpaper():
     return Config(get_path("wallpaper_config"))
 
+def load_quotes():
+    return Config(get_path("quotes"))
+
 
 def load_neural():
     logger.info("loading neural config")
