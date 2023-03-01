@@ -1,10 +1,9 @@
 import json
 import random
 import os
+import time
 import telebot
 from telebot import types
-import sqlite3
-import custom_log
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 import config
 import pathlib
@@ -17,6 +16,7 @@ all_picrandom_files = []
 all_bthread_files = []
 all_anek_files = []
 all_quote_files = []
+
 
 bot = telebot.TeleBot(conf.get_value("token"))
 
@@ -58,27 +58,25 @@ def pic_message(message):
     bot.send_message(message.chat.id, text)
 
 @bot.inline_handler(lambda query: True)
-def inline_quote(inline_query):
-    file_p = random.choice(all_picrandom_files)
-    file_b = random.choice(all_bthread_files)
-    
-    
+def inline_quote(inline_query):    
+    ids = f'{time.time()*100000}'
+
     bot.answer_inline_query(inline_query.id, [
-        types.InlineQueryResultArticle(f'{random.randint(0, 444)}', 
+        types.InlineQueryResultArticle(f'{ids}+1', 
                                        'Отправить цитато4ку', 
                                        thumb_url=conf.get_value('quote_thumb_url'),
                                        thumb_width=128,
                                        thumb_height=128,
                                        input_message_content=types.InputTextMessageContent(get_quote())),
 
-        types.InlineQueryResultArticle(f'{random.randint(0, 444)}', 
+        types.InlineQueryResultArticle(f'{ids}+2', 
                                        'Отправить анек',
                                        thumb_url=conf.get_value('anek_thumb_url'),
                                        thumb_width=128,
                                        thumb_height=128, 
                                        input_message_content=types.InputTextMessageContent(get_anek())),
 
-        types.InlineQueryResultArticle(f'{random.randint(0, 444)}', 
+        types.InlineQueryResultArticle(f'{ids}+3', 
                                        'У картинок ниже нет подписей потому что тг говно',
                                        description='Левая - двач, правая - пикрандом. Дуров, допили клиент тг...', 
                                        thumb_url=conf.get_value('no_tittle_thumb_url'),
@@ -86,14 +84,14 @@ def inline_quote(inline_query):
                                        thumb_height=128,
                                        input_message_content=types.InputTextMessageContent("Ну и нахера ты сюда нажал")),
 
-        types.InlineQueryResultPhoto(f'{random.randint(0, 444)}', 
+        types.InlineQueryResultPhoto(f'{ids}+4', 
                                        title='Отправить /b/',
                                        photo_url=get_dvach(),
                                        thumb_url=conf.get_value('bthread_thumb_url'),
                                        photo_width=128,
                                        photo_height=128),
 
-        types.InlineQueryResultPhoto(f'{random.randint(0, 444)}', 
+        types.InlineQueryResultPhoto(f'{ids}+5', 
                                        title='Отправить пикрандом', 
                                        photo_url=get_picrandom(),
                                        thumb_url=conf.get_value('picrandom_thumb_url'),
