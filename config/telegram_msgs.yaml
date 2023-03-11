@@ -20,7 +20,6 @@ change_config_button: Change - {code}
 change_config_msg: |-
   Changing {type} {code}
   Enter new value
-  Cancel - /cancel, empty - /empty
 change_config_success: Changing success
 change_config_error: Changing error
 config_saved: Config saved!

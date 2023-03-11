@@ -25,6 +25,8 @@ GEN_CMD = "gen_cmd"
 SAVE_FOLDER = "save_folder"
 IMG2IMG_DENOISING_STRENGTH = "img2img_denoising_strength"
 IMG2IMG_DEFAULT_PROMPT="img2img_default_prompt"
+HR_SIZE = "hr_size"
+HR_UPSCALER = "hr_upscaler"
 
 class NotFoundException(Exception):
     pass

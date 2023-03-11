@@ -1,3 +1,4 @@
+import shlex
 import time
 from telebot import TeleBot;
 from telebot import types;
@@ -32,7 +33,7 @@ def start(message):
     bot.send_message(message.chat.id, reply_to_message_id=message.id, text=msgs.get_value("hello"))
 
 
-@bot.message_handler(commands=[conf.get_value("gen_cmd")])
+@bot.message_handler(commands=["anime"])
 def generate_handler(message):
     global loading_image_id
     try:
@@ -76,6 +77,48 @@ def generate_handler(message):
         __logFatal(e, message.chat.id, message.id)
 
 
+
+@bot.message_handler(commands=["anime_hr"])
+def generate_handler_hr(message):
+    global loading_image_id
+    try:
+        msgtext = message.text
+
+        if not msgtext:
+            bot.send_message(message.chat.id, reply_to_message_id=message.id, text=msgs.get_value("error_text"))
+            return
+
+        array = msgtext.split(" ", maxsplit=1)
+        if len(array) < 2:
+            bot.send_message(message.chat.id, reply_to_message_id=message.id, text=msgs.get_value("error_text"))
+            return
+
+        prompt_user = array[1]
+
+        logger.info(f"Generate with prompt {prompt_user} (HR)")
+        status_msg = __send_waiting(message)
+
+        filename = f"img_{prompt2filename(prompt_user)}_{time.time()}.png"
+
+        logger.info(f"Img name - {filename}")
+
+        # GENERATING
+        img = __generate(prompt_user, status_msg, True)
+
+        img.save(os.path.join(conf.get_value(config.SAVE_FOLDER), filename))
+
+        bot.edit_message_media(
+            message_id=status_msg.message_id,
+            chat_id=status_msg.chat.id,
+            media=types.InputMediaPhoto(img.to_reader(), caption=msgs.get_value("completed")))
+
+        logger.info(f"Completed")
+
+    except Exception as e:
+        __logFatal(e, message.chat.id, message.id)
+
+
+
 @bot.message_handler(commands=["steps"])
 def negative_handler(message: types.Message):
     try:
@@ -102,6 +145,7 @@ def negative_handler(message: types.Message):
 
 @bot.message_handler(commands=["size"])
 def size_handler(message: types.Message):
+    # /size 960x540
     try:
         msgtext = message.text
 
@@ -110,6 +154,10 @@ def size_handler(message: types.Message):
             return
 
         array = msgtext.split(" ", maxsplit=2)
+
+        if len(array) != 3:
+            array = msgtext.split("x", maxsplit=2)
+        
         if len(array) == 3:
             try:
                 width = int(array[1])
@@ -353,7 +401,7 @@ def config_handler(message: types.Message):
             messages.append({"msg" :msg, "kbd":kbd})
 
         for to_send in messages:
-            bot.send_message(chat_id=message.chat.id, text=to_send["msg"], reply_markup=to_send["kbd"])
+            bot.send_message(chat_id=message.chat.id, text=to_send["msg"], reply_markup=to_send["kbd"], parse_mode="markdown")
 
     except Exception as e:
         __logFatal(e, message.chat.id, message.id)
@@ -512,14 +560,13 @@ def conf_change_callback(msg:types.CallbackQuery):
 
     def next_handler(msg_in:types.Message):
         text = msg_in.text
-        if text == '/cancel':
-            return
+        if text == None: return
 
-        if text == '/empty':
-            text = ""
+        tokens = shlex.split(text)
+        if len(tokens) < 1: return
 
         try:
-            neural.set_neural_setting_value(setting_name, text)
+            neural.set_neural_setting_value(setting_name, tokens[0])
             bot.send_message(reply_to_message_id=msg_in.message_id, chat_id=msg_in.chat.id, text=msgs.get_value("change_config_success"))
         except:
             bot.send_message(reply_to_message_id=msg_in.message_id, chat_id=msg_in.chat.id, text=msgs.get_value("change_config_error"))
@@ -564,22 +611,29 @@ def __send_waiting(message: types.Message) -> types.Message:
     return sent_msg
 
 
-def __generate(prompt_user, sent: types.Message) -> api.Base64Img:
+def __generate(prompt_user, sent: types.Message, hr=False) -> api.Base64Img:
     global negative
     ret = []
 
-    logger.info(f"Generating, prompt = {prompt_user}")
+    logger.info(f"Generating, prompt = {prompt_user}, hr = {hr}")
 
     def gen_func():
-        img = api.gen_img(url, prompt_user, neural.get_neural_setting_value(config.NEGATIVE), neural.get_neural_setting_value(config.WIDTH), neural.get_neural_setting_value(config.HEIGHT),
-                          steps=neural.get_neural_setting_value(config.STEPS))
+        img = api.gen_img(url, 
+                          prompt_user, 
+                          neural.get_neural_setting_value(config.NEGATIVE), 
+                          neural.get_neural_setting_value(config.WIDTH), 
+                          neural.get_neural_setting_value(config.HEIGHT),
+                          steps=neural.get_neural_setting_value(config.STEPS),
+                          enable_hr=hr,
+                          hr_scale=neural.get_neural_setting_value(config.HR_SIZE),
+                          hr_upscaler=neural.get_neural_setting_value(config.HR_UPSCALER))
         ret.append(img)
 
     th_creator = threading.Thread(target=gen_func)
     th_creator.start()
 
     while th_creator.is_alive():
-        if neural.get_neural_setting_value(config.SHOW_PROGRESS):
+        if neural.get_neural_setting_value(config.SHOW_PROGRESS) and sent:
             progress = api.get_progress(url, not neural.get_neural_setting_value(config.SHOW_PROGRESS_PREVIEW))
 
             banner = msgs.get_value("progress").format(progress=progress.progress, eta=int(progress.eta_relative))

@@ -125,7 +125,7 @@ def gen_img2img(url: str,
 
 
 def get_progress(url: str, skip_preview: bool):
-    resp = requests.get(url=f'{url}/sdapi/v1/progress', params={"skip_current_image": skip_preview})
+    resp = requests.get(url=f'{url}/sdapi/v1/progress', params={"skip_current_image": True})
     __check_resp(resp)
 
     js = resp.json()

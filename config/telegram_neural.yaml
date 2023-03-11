@@ -2,34 +2,62 @@
   description: Negative prompt for img2img or text2img
   type: str
   value: realistic
+#---  
 - code: steps
   type: int
   description: Steps for img2img or text2img
   value: 35
+#---
 - code: width
   description: Width for generated images
   type: int
   value: 512
+#---
 - code: height
   description: Height for generated images
   type: int
   value: 512
+#---
 - code: show_progress
   description: Show 'progress bar'?
   type: bool
   value: true
+#---
 - code: show_progress_preview
   description: Show preview in 'progress bar'?
   type: bool
   value: true
+#---
 - code: upscale
-  description: Upscale generated images?
+  description: Upscale text2img generated images?
   type: bool
   value: true
+#---
+- code: upscale_size
+  description: text2img upscale size
+  type: float
+  value: 2
+#---
+- code: hr_size
+  description: hr_fix upscale koef
+  type: float
+  value: 2
+#---
+- code: hr_upscaler
+  description: hr_fix upscaler
+  type: text
+  value: R-ESRGAN 4x+ Anime6B
+#---
+- code: upscale_size
+  description: text2img upscale size
+  type: float
+  value: 2
+#---
 - code: img2img_denoising_strength
   description: Denoising strength for img2img
   type: float
   value: 0.7
+#---
 - code: img2img_default_prompt
   description: Denoising strength for img2img
   type: str
