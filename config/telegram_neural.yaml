@@ -3,62 +3,97 @@
   type: str
   value: realistic
 #---  
+- code: cfg_scale
+  description: Cfg scale for generating
+  type: float
+  value: 5
+#---  
 - code: steps
-  type: int
   description: Steps for img2img or text2img
+  type: int
   value: 35
-#---
+  #---  
 - code: width
   description: Width for generated images
   type: int
   value: 512
-#---
+  #---  
 - code: height
   description: Height for generated images
   type: int
   value: 512
-#---
+  #---  
 - code: show_progress
   description: Show 'progress bar'?
   type: bool
   value: true
-#---
+  #---  
 - code: show_progress_preview
   description: Show preview in 'progress bar'?
   type: bool
   value: true
-#---
+  #---  
 - code: upscale
   description: Upscale text2img generated images?
   type: bool
   value: true
-#---
+  #---  
 - code: upscale_size
   description: text2img upscale size
   type: float
   value: 2
-#---
 - code: hr_size
-  description: hr_fix upscale koef
+#---  
+  description: hrfix upscale koef
   type: float
   value: 2
-#---
+  #---  
 - code: hr_upscaler
-  description: hr_fix upscaler
+  description: hrfix upscaler
   type: text
   value: R-ESRGAN 4x+ Anime6B
-#---
+  #---  
 - code: upscale_size
   description: text2img upscale size
   type: float
   value: 2
-#---
+  #---  
 - code: img2img_denoising_strength
   description: Denoising strength for img2img
   type: float
   value: 0.7
-#---
+  #---  
 - code: img2img_default_prompt
   description: Denoising strength for img2img
   type: str
-  value: 'anime, anime version of'
+  value: anime, anime version of
+  #---  
+- code: img2img_controlnet
+  description: Use controlnet for img2img
+  type: bool
+  value: false
+  #---  
+- code: img2img_controlnet_module
+  description: Preprocessor module for controlnet
+  type: str
+  value: canny
+  #---  
+- code: img2img_controlnet_model
+  description: Controlnet model
+  type: str
+  value: control_sd15_canny [fef5e48e]
+  #---  
+- code: img2img_controlnet_weight
+  description: Controlnet model weight
+  type: float
+  value: 0.7
+  #---  
+- code: img2img_controlnet_guidance_start
+  description: Controlnet guidance start
+  type: float
+  value: 0.0
+  #---  
+- code: img2img_controlnet_guidance_end
+  description: Controlnet guidance end
+  type: float
+  value: 0.85

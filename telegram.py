@@ -14,6 +14,7 @@ import os
 import custom_log
 from PIL import Image
 import custom_log
+import chat_storage
 
 logger = custom_log.create_logger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -27,6 +28,10 @@ neural = config.load_neural()
 url = conf.get_value(config.URL)
 
 bot = TeleBot(token=conf.get_value(config.TOKEN))
+
+
+
+controlnet_models_num2value = chat_storage.Chat_storage()
 
 @bot.message_handler(commands=["start"])
 def start(message):
@@ -60,6 +65,8 @@ def generate_handler(message):
         # GENERATING
         img = __generate(prompt_user, status_msg)
 
+        about = api.get_png_info(url, img)
+
         # UPSCALE
         if neural.get_neural_setting_value(config.UPSCALE):
             img = __upscale(img, status_msg)
@@ -69,7 +76,8 @@ def generate_handler(message):
         bot.edit_message_media(
             message_id=status_msg.message_id,
             chat_id=status_msg.chat.id,
-            media=types.InputMediaPhoto(img.to_reader(), caption=msgs.get_value("completed")))
+            media=types.InputMediaPhoto(img.to_reader(), 
+                                        caption=msgs.get_value("completed").format(info=about)))
 
         logger.info(f"Completed")
 
@@ -104,13 +112,16 @@ def generate_handler_hr(message):
 
         # GENERATING
         img = __generate(prompt_user, status_msg, True)
+        
+        about = api.get_png_info(url, img)
 
         img.save(os.path.join(conf.get_value(config.SAVE_FOLDER), filename))
 
         bot.edit_message_media(
             message_id=status_msg.message_id,
             chat_id=status_msg.chat.id,
-            media=types.InputMediaPhoto(img.to_reader(), caption=msgs.get_value("completed")))
+            media=types.InputMediaPhoto(img.to_reader(), caption=
+                                        msgs.get_value("completed").format(info=about)))
 
         logger.info(f"Completed")
 
@@ -378,14 +389,14 @@ def config_handler(message: types.Message):
     try:
         items = neural.get_neural_config()
         messages = []
-        msg = msgs.get_value("config_header")+"\n"
+        msg = "BOT CONFIG \n"
+        
         kbd = types.InlineKeyboardMarkup(row_width=1)        
         for item in items:
-            next_entry = msgs.get_value("config_entry").format(
-                code=item["code"],
-                description=item["description"],
-                type=item["type"],
-                value=item["value"]) + "\n====\n"
+            next_entry =  f'*{item["type"]}* `{item["code"]}` \n' 
+            next_entry += f'-- {item["description"]} \n'
+            next_entry += f'-- `{item["value"]}`\n'
+            next_entry += f'-------\n'
             
             if len(msg) + len (next_entry) > 4096:
                 messages.append({"msg" :msg, "kbd":kbd})
@@ -394,14 +405,18 @@ def config_handler(message: types.Message):
             
             msg += next_entry
 
+            #bot.send_message(chat_id=message.chat.id, text=next_entry, parse_mode="markdown")
+
             payload = json.dumps({"act":"conf_chg", "name":item["code"]})        
-            kbd.add(types.InlineKeyboardButton(text=msgs.get_value("change_config_button").format(code = item["code"]), callback_data=payload))
+            kbd.add(types.InlineKeyboardButton(text = f'Change {item["code"]}', callback_data=payload))
 
         if msg:
             messages.append({"msg" :msg, "kbd":kbd})
 
+        
         for to_send in messages:
             bot.send_message(chat_id=message.chat.id, text=to_send["msg"], reply_markup=to_send["kbd"], parse_mode="markdown")
+            
 
     except Exception as e:
         __logFatal(e, message.chat.id, message.id)
@@ -439,9 +454,17 @@ def img2img_handler(message: types.Message):
         if not text:
             text = message.text
 
-        denoising=neural.get_neural_setting_value(config.IMG2IMG_DENOISING_STRENGTH)
+       
         steps=neural.get_neural_setting_value(config.STEPS)
         prompt = neural.get_neural_setting_value(config.IMG2IMG_DEFAULT_PROMPT)
+        
+        controlnet=neural.get_neural_setting_value(config.IMG2IMG_CONTROLNET)
+
+        same_koef = 0.7
+        if not controlnet:
+            same_koef=neural.get_neural_setting_value(config.IMG2IMG_DENOISING_STRENGTH)
+        else:
+            same_koef=neural.get_neural_setting_value(config.IMG2IMG_CONTROLNET_WEIGHT)
 
         if text:
             
@@ -477,7 +500,7 @@ def img2img_handler(message: types.Message):
             bot.send_message(message.chat.id, reply_to_message_id=message.id, text=msgs.get_value("error_text"))
             return
         
-        if denoising > 1:
+        if same_koef > 1:
             bot.send_message(message.chat.id, reply_to_message_id=message.id, text=msgs.get_value("error_text"))
             return
 
@@ -528,26 +551,52 @@ def img2img_handler(message: types.Message):
         img_pil.save(output_data, format="png")
         output_data.seek(0)
 
-        logger.info(f"img2img generating {need_sizes[0]}x{need_sizes[1]}, prompt - {prompt}, denoising - {denoising}, steps - {steps}")
+        img_input = api.Base64Img(base64.b64encode(output_data.read()).decode("utf-8"))
+        img_output = None
 
-        img = api.Base64Img(base64.b64encode(output_data.read()).decode("utf-8"))
-        img = api.gen_img2img(url, 
-                            img, 
-                            prompt=prompt, 
-                            negative_prompt=neural.get_neural_setting_value(config.NEGATIVE),
-                            steps=steps,
-                            denoising=denoising,
-                            width=need_sizes[0],
-                            height=need_sizes[1] )
+        if not controlnet:
+            logger.info(f"img2img generating {need_sizes[0]}x{need_sizes[1]}, prompt - {prompt}, same koef - {same_koef}, steps - {steps}")
 
+            
+            img = api.gen_img2img(url, 
+                                img_input, 
+                                prompt=prompt, 
+                                negative_prompt=neural.get_neural_setting_value(config.NEGATIVE),
+                                cfg_scale=neural.get_neural_setting_value(config.CFG_SCALE),
+                                steps=steps,
+                                denoising=same_koef,
+                                width=need_sizes[0],
+                                height=need_sizes[1] )
+            img_output = img
+        else:
+            logger.info(f"img2img generating controlnet {need_sizes[0]}x{need_sizes[1]}, prompt - {prompt}, same koef - {same_koef}, steps - {steps}")
+            img = api.gen_img2img_controlnet(url, 
+                                            img_input, 
+                                            img_input,
+                                            neural.get_neural_setting_value(config.IMG2IMG_CONTROLNET_MODULE),
+                                            neural.get_neural_setting_value(config.IMG2IMG_CONTROLNET_MODEL),
+                                            cfg_scale=neural.get_neural_setting_value(config.CFG_SCALE),
+                                            controlnet_weight=same_koef,
+                                            guidance_start=neural.get_neural_setting_value(config.IMG2IMG_CONTROLNET_GUIDANCE_START),
+                                            guidance_end=neural.get_neural_setting_value(config.IMG2IMG_CONTROLNET_GUIDANCE_END),
+                                            prompt=prompt, 
+                                            negative_prompt=neural.get_neural_setting_value(config.NEGATIVE),
+                                            steps=steps,
+                                            denoising=0.85,
+                                            width=need_sizes[0],
+                                            height=need_sizes[1] )
+            img_output = img
+
+        about = api.get_png_info(url, img_output)
         if neural.get_neural_setting_value(config.UPSCALE):
-            img  = __upscale(img, status_msg)
+            img_output  = __upscale(img_output, status_msg)
 
         
         bot.edit_message_media(
             message_id=status_msg.message_id,
             chat_id=status_msg.chat.id,
-            media=types.InputMediaPhoto(img.to_reader(), caption=msgs.get_value("completed")))
+            media=types.InputMediaPhoto(img_output.to_reader(), 
+                                        caption=msgs.get_value("completed").format(info=about)))
 
     except Exception as e:
         __logFatal(e, message.chat.id, message.id)
@@ -580,6 +629,167 @@ def conf_change_callback(msg:types.CallbackQuery):
     bot.edit_message_reply_markup(chat_id=msg.message.chat.id, message_id=msg.message.id, reply_markup=None)
   #  bot.edit_message_reply_markup(chat_id=msg.message.chat.id, message_id=msg.message.id, reply_markup=msg.message.reply_markup)
     bot.register_next_step_handler(msg.message, next_handler)
+
+
+@bot.message_handler(commands=["controlnet_model"])
+def controlnet_model(message: types.Message):
+    try:
+        global controlnet_models_num2value
+
+        prompt_line = None
+        text = message.text
+        if text:
+            prompt_sp = text.split(" ", maxsplit=1)
+            if len(prompt_sp) == 2:
+                prompt_line = prompt_sp[1]
+        
+        if prompt_line:
+            model_name = prompt_line
+            
+            try:
+                ind_prompt = int(prompt_line)
+                if controlnet_models_num2value.msg(message)[ind_prompt]:
+                    model_name = controlnet_models_num2value.msg(message)[ind_prompt]
+            except Exception as e:
+                pass
+
+            neural.set_neural_setting_value(config.IMG2IMG_CONTROLNET_MODEL, model_name)
+            st = f'Controlnet model changed to {model_name}'
+            bot.send_message(chat_id=message.chat.id, 
+                             reply_to_message_id=message.id,
+                             text=st)
+            return
+        
+        models = api.controlnet_models(url)
+        pattern = '*{ind}* - `{model}`'
+        result = ''
+        cnt = 0
+
+        controlnet_models_num2value.resetmsg(message)
+
+        for model in models:
+            result += pattern.format(ind=cnt, model=model)
+            controlnet_models_num2value.msg(message)[cnt]=model
+            result += "\n"
+            cnt += 1
+        
+        result += f"*CURRENT*  `{neural.get_neural_setting_value(config.IMG2IMG_CONTROLNET_MODEL)}`"
+
+        bot.send_message(chat_id=message.chat.id, 
+                         reply_to_message_id=message.id,
+                         text=result, parse_mode="markdown")
+        
+    except Exception as e:
+        __logFatal(e, message.chat.id, message.id)
+
+@bot.message_handler(commands=["controlnet_module"])
+def controlnet_module(message: types.Message):
+    try:
+        prompt_line = None
+        text = message.text
+        if text:
+            prompt_sp = text.split(" ", maxsplit=1)
+            if len(prompt_sp) == 2:
+                prompt_line = prompt_sp[1]
+        
+        if prompt_line:
+            neural.set_neural_setting_value(config.IMG2IMG_CONTROLNET_MODULE, prompt_line)
+            bot.send_message(chat_id=message.chat.id, 
+                             reply_to_message_id=message.id,
+                             text=msgs.get_value("controlnet_module_change").format(module=prompt_line))
+            return
+        
+    except Exception as e:
+        __logFatal(e, message.chat.id, message.id)
+
+
+@bot.message_handler(commands=["controlnet_weight"])
+def controlnet_weight(message: types.Message):
+    try:
+        prompt_line = None
+        text = message.text
+        if text:
+            prompt_sp = text.split(" ", maxsplit=1)
+            if len(prompt_sp) == 2:
+                prompt_line = prompt_sp[1]
+        
+        
+        if prompt_line:
+            neural.set_neural_setting_value(config.IMG2IMG_CONTROLNET_WEIGHT, prompt_line)
+            bot.send_message(chat_id=message.chat.id, 
+                             reply_to_message_id=message.id,
+                             text=msgs.get_value("controlnet_weight_change").format(weight=prompt_line))
+            return
+        
+    except Exception as e:
+        __logFatal(e, message.chat.id, message.id)
+
+
+@bot.message_handler(commands=["cfg_scale"])
+def cfg_scale(message: types.Message):
+    try:
+        prompt_line = None
+        text = message.text
+        if text:
+            prompt_sp = text.split(" ", maxsplit=1)
+            if len(prompt_sp) == 2:
+                prompt_line = prompt_sp[1]
+        
+        
+        if prompt_line:
+            neural.set_neural_setting_value(config.CFG_SCALE, prompt_line)
+            bot.send_message(chat_id=message.chat.id, 
+                             reply_to_message_id=message.id,
+                             text=msgs.get_value("cfg_scale_state").format(scale=prompt_line))
+            return
+        
+        bot.send_message(chat_id=message.chat.id, 
+                         reply_to_message_id=message.id,
+                         text=
+                         msgs.get_value("cfg_scale_state").format(scale=neural.get_neural_setting_value(config.CFG_SCALE)))
+        
+    except Exception as e:
+        __logFatal(e, message.chat.id, message.id)
+
+
+@bot.message_handler(commands=["controlnet"])
+def controlnet(message: types.Message):
+    try:
+        prompt_line = None
+        text = message.text
+        if text:
+            prompt_sp = text.split(" ", maxsplit=1)
+            if len(prompt_sp) == 2:
+                prompt_line = prompt_sp[1]
+        
+        
+        if prompt_line:
+            val = False
+            val =  'true' == prompt_line.lower() or '1' == prompt_line
+                
+            neural.set_neural_setting_value(config.IMG2IMG_CONTROLNET, val)
+            bot.send_message(chat_id=message.chat.id, 
+                             reply_to_message_id=message.id,
+                             text=f'Controlnet state set to {val}')
+            return
+        
+        report = msgs.get_value("controlnet_report").format(
+            state = neural.get_neural_setting_value(config.IMG2IMG_CONTROLNET),
+            module = neural.get_neural_setting_value(config.IMG2IMG_CONTROLNET_MODULE),
+            model = neural.get_neural_setting_value(config.IMG2IMG_CONTROLNET_MODEL),
+            weight = neural.get_neural_setting_value(config.IMG2IMG_CONTROLNET_WEIGHT),
+            g_start = neural.get_neural_setting_value(config.IMG2IMG_CONTROLNET_GUIDANCE_START),
+            g_end = neural.get_neural_setting_value(config.IMG2IMG_CONTROLNET_GUIDANCE_END),
+        )
+        
+        bot.send_message(chat_id=message.chat.id, 
+                         reply_to_message_id=message.id,
+                         text=report,
+                         parse_mode='markdown')
+        
+    except Exception as e:
+        __logFatal(e, message.chat.id, message.id)
+
 
 
 @bot.message_handler(commands=["shutdown"])

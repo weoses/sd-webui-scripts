@@ -1,8 +1,11 @@
 hello: Hello
 error_text: Invalid command
 working: Its working..
-completed: Completed
+completed: |
+ Completed 
+ {info}
 upscaling: Upscaling...
+cfg_scale_state: Current cfg scale - {scale}
 progress: "Progress: {progress}\nETA: {eta} "
 current_negative_prompt: Current negative prompt - {prompt}
 current_steps: Current steps - {steps}
@@ -36,6 +39,28 @@ help: |-
   /negative <text>
   /img2img [denoising] [steps] [prompt]
   /model
-  /show_progress_preview<True|False or 0|1>
+  /show_progress_preview <True|False or 0|1>
   /show_progress <True|False or 0|1>
   /upscale (Send as caption for image)"
+  /controlnet_model <model name> list or set controlnet model
+  /controlnet_module <module name> set controlnet module (eg. canny, hed, normal, none)
+  /controlnet_weight <weight, 0.0-1.0> set controlnet weight
+
+controlnet_report: |-
+ Controlnet is `{state}`
+ Controlnet module(prep) is `{module}`
+ Controlnet model is `{model}`
+ Controlnet weight is `{weight}` 
+ Controlnet guidance start is `{g_start}` 
+ Controlnet guidance end is `{g_end}` 
+
+ *Commands*
+ /controlnet\_module
+ /controlnet\_model
+ /controlnet\_weight
+ /controlnet
+
+controlnet_module_change: Controlnet module (preprocessor) changed to {module}
+controlnet_model_change: Controlnet model changed to {model}
+controlnet_weight_change: Controlnet model weight changed to {weight}
+controlnet_model_row: "* - {model} "

@@ -124,6 +124,58 @@ def gen_img2img(url: str,
     return Base64Img(resp.json()["images"][0])
 
 
+def gen_img2img_controlnet( url: str,
+                            img: Base64Img,
+                            control_img: Base64Img,
+                            controlnet_preprocessor : str,
+                            controlnet_model : str,
+                            controlnet_weight : float = 0.7,
+                            guidance_start : float = 0,
+                            guidance_end : float = 0.85,
+                            prompt="anime, anime version of",
+                            negative_prompt="lowres, bad anatomy",
+                            width=512,
+                            height=512,
+                            cfg_scale=4,
+                            steps=40,
+                            sampler="Euler a",
+                            denoising = 0.85) -> Base64Img:
+    resp = requests.post(url=f'{url}/controlnet/img2img', json={
+        "init_images": [
+            "data:image/png;base64," + img.base64String
+        ],
+        "prompt": prompt,
+        "negative_prompt": negative_prompt,
+        "steps": steps,
+        "width": width,
+        "height": height,
+        "cfg_scale": cfg_scale,
+        "sampler_name": sampler,
+        "seed": -1,
+        "denoising_strength": denoising,
+        "controlnet_units" : [{
+            "input_image" : "data:image/png;base64," + control_img.base64String,
+            "module" : controlnet_preprocessor,
+            "model" : controlnet_model,
+            "weight" : controlnet_weight,
+            "resize_mode": "Scale to Fit (Inner Fit)",
+            "guidance_start" : guidance_start,
+            "guidance_end" : guidance_end,
+            "guessmode" : False
+        }]
+    })
+    __check_resp(resp)
+
+    return Base64Img(resp.json()["images"][0])
+
+
+def controlnet_models( url: str) -> list:
+    resp = requests.get(url=f'{url}/controlnet/model_list')
+    __check_resp(resp)
+
+    return resp.json()["model_list"]
+
+
 def get_progress(url: str, skip_preview: bool):
     resp = requests.get(url=f'{url}/sdapi/v1/progress', params={"skip_current_image": True})
     __check_resp(resp)
@@ -139,3 +191,13 @@ def get_options(url: str) -> Config:
 
     js = resp.json()
     return Config(js)
+
+def get_png_info(url, img: Base64Img) -> str:
+    resp = requests.post(url=f'{url}/sdapi/v1/png-info', json={
+        "image": "data:image/png;base64," + img.base64String
+    })
+    __check_resp(resp)
+
+    js = resp.json()
+    return js["info"]
+

@@ -15,6 +15,7 @@ TOKEN = "token"
 
 
 NEGATIVE = "negative"
+CFG_SCALE = "cfg_scale"
 STEPS = "steps"
 WIDTH = "width"
 HEIGHT = "height"
@@ -28,16 +29,25 @@ IMG2IMG_DEFAULT_PROMPT="img2img_default_prompt"
 HR_SIZE = "hr_size"
 HR_UPSCALER = "hr_upscaler"
 
+IMG2IMG_CONTROLNET = "img2img_controlnet"
+IMG2IMG_CONTROLNET_MODULE = "img2img_controlnet_module"
+IMG2IMG_CONTROLNET_MODEL = "img2img_controlnet_model"
+IMG2IMG_CONTROLNET_WEIGHT = "img2img_controlnet_weight"
+IMG2IMG_CONTROLNET_GUIDANCE_START = "img2img_controlnet_guidance_start"
+IMG2IMG_CONTROLNET_GUIDANCE_END = "img2img_controlnet_guidance_end"
+
+
 class NotFoundException(Exception):
     pass
 
 
 class ConfigNeural:
-    __slots__ = ("__conf_node", "__file")
+    __slots__ = ("__conf_node", "__file", "__name")
 
-    def __init__(self, file:str) -> None:
+    def __init__(self, file:str, name:str) -> None:
         logger.info(f"Load neural config, file - {file}")
         self.__file = file
+        self.__name = name
         self.__conf_node = yaml.load(open(self.__file, "r", encoding="utf-8"), Loader=yaml.SafeLoader)
 
     def get_neural_config(self):
@@ -67,6 +77,10 @@ class ConfigNeural:
         setting["value"] = tp(value)
 
     def save(self):
+        if not self.__file.endswith ('.current.yaml'):
+            self.__file = os.path.join(CONFIG_FOLDER, f'{self.__name}.current.yaml')
+
+        logger.info(f"Save config {self.__name} to {self.__file}")
         yaml.dump(self.__conf_node, open(self.__file, "w", encoding="utf-8"))
 
 
@@ -100,7 +114,7 @@ def load_quotes():
 
 def load_neural():
     logger.info("loading neural config")
-    return ConfigNeural(get_path("telegram_neural"))
+    return ConfigNeural(get_path("telegram_neural"), "telegram_neural")
 
 
 def reset_neural():
